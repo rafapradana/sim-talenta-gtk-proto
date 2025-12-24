@@ -1,0 +1,11 @@
+# Migration and seed runner
+FROM node:20-alpine
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+RUN npm ci
+
+COPY . .
+
+# Run migrations and seed
+CMD ["sh", "-c", "npm run db:push && npm run db:seed"]
