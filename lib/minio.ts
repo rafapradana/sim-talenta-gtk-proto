@@ -8,7 +8,7 @@ export const minioConfig = {
   secretKey: process.env.MINIO_SECRET_KEY || "minioadmin",
 };
 
-export const BUCKET_NAME = process.env.MINIO_BUCKET || "sim-talenta-gtk";
+export const BUCKET_NAME = process.env.MINIO_BUCKET || "sipodi";
 
 export const minioClient = new Minio.Client(minioConfig);
 

@@ -1,5 +1,5 @@
 -- =============================================
--- SIM-TALENTA GTK - Database Initialization
+-- SIPODI - Database Initialization
 -- =============================================
 
 -- Drop existing tables and types (for clean install)

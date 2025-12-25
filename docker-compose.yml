@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: sim-talenta-app
+    container_name: sipodi-app
     restart: unless-stopped
     ports:
       - "${APP_PORT:-3000}:3000"
@@ -15,16 +15,16 @@ services:
       - MINIO_PORT=${MINIO_PORT:-9000}
       - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY:-}
       - MINIO_SECRET_KEY=${MINIO_SECRET_KEY:-}
-      - MINIO_BUCKET=${MINIO_BUCKET:-sim-talenta-gtk}
+      - MINIO_BUCKET=${MINIO_BUCKET:-sipodi}
       - MINIO_USE_SSL=${MINIO_USE_SSL:-false}
     networks:
-      - sim-talenta-network
+      - sipodi-network
     volumes:
       - uploads:/app/public/uploads
 
   minio:
     image: minio/minio:latest
-    container_name: sim-talenta-minio
+    container_name: sipodi-minio
     restart: unless-stopped
     command: server /data --console-address ":9001"
     environment:
@@ -36,7 +36,7 @@ services:
     volumes:
       - minio_data:/data
     networks:
-      - sim-talenta-network
+      - sipodi-network
     profiles:
       - storage
 
@@ -45,5 +45,5 @@ volumes:
   uploads:
 
 networks:
-  sim-talenta-network:
+  sipodi-network:
     driver: bridge

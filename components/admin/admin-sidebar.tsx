@@ -56,7 +56,10 @@ export function AdminSidebar() {
           />
           <div className="flex flex-col">
             <span className="text-sm font-semibold">SIPODI</span>
-            <span className="text-xs text-muted-foreground">Sistem Informasi Potensi Diri</span>
+            <span className="text-[10px] text-muted-foreground leading-tight">
+              Cabang Dinas Pendidikan Wilayah Malang<br />
+              (Kota Malang - Kota Batu)
+            </span>
           </div>
         </Link>
       </SidebarHeader>

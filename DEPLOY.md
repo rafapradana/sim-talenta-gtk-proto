@@ -1,4 +1,4 @@
-# Panduan Deploy SIM-TALENTA GTK
+# Panduan Deploy SIPODI
 
 ## Opsi 1: Vercel (Gratis & Mudah)
 
