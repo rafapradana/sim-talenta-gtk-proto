@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SIM-TALENTA GTK - Cabang Dinas Pendidikan Wilayah Malang",
-  description: "Sistem Informasi Manajemen Talenta GTK",
+  title: "SIPODI - Sistem Informasi Potensi Diri",
+  description: "Sistem Informasi Potensi Diri GTK - Cabang Dinas Pendidikan Wilayah Malang",
 };
 
 export default function RootLayout({

@@ -1,6 +1,6 @@
-# SIM-TALENTA GTK
+# SIPODI (Sistem Informasi Potensi Diri)
 
-Sistem Informasi Manajemen Talenta GTK - Cabang Dinas Pendidikan Wilayah Malang
+Sistem Informasi Potensi Diri GTK - Cabang Dinas Pendidikan Wilayah Malang
 
 ## Tech Stack
 

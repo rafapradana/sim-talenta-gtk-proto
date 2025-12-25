@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
   Sidebar,
@@ -20,7 +21,6 @@ import {
   IconUsers,
   IconUserCircle,
   IconAward,
-  IconSettings,
   IconLogout,
 } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
@@ -46,13 +46,17 @@ export function AdminSidebar() {
   return (
     <Sidebar>
       <SidebarHeader className="border-b border-sidebar-border p-4">
-        <Link href="/admin" className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-            <IconAward className="h-5 w-5" />
-          </div>
+        <Link href="/admin" className="flex items-center gap-3">
+          <Image
+            src="/logo-provinsi-jawa-timur.png"
+            alt="Logo Provinsi Jawa Timur"
+            width={40}
+            height={40}
+            className="object-contain"
+          />
           <div className="flex flex-col">
-            <span className="text-sm font-semibold">SIM-TALENTA</span>
-            <span className="text-xs text-muted-foreground">GTK Malang</span>
+            <span className="text-sm font-semibold">SIPODI</span>
+            <span className="text-xs text-muted-foreground">Sistem Informasi Potensi Diri</span>
           </div>
         </Link>
       </SidebarHeader>

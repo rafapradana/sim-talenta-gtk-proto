@@ -49,8 +49,15 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-muted/30 p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl">SIM-TALENTA GTK</CardTitle>
-          <CardDescription>Masuk ke akun Anda</CardDescription>
+          <div className="flex justify-center mb-4">
+            <img
+              src="/logo-provinsi-jawa-timur.png"
+              alt="Logo Provinsi Jawa Timur"
+              className="h-16 w-auto"
+            />
+          </div>
+          <CardTitle className="text-2xl">SIPODI</CardTitle>
+          <CardDescription>Sistem Informasi Potensi Diri</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
