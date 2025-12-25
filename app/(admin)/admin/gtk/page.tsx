@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DataTable } from "@/components/admin/data-table";
 import { GtkDialog } from "@/components/admin/gtk-dialog";
-import { IconPlus, IconPencil, IconTrash, IconEye, IconDownload } from "@tabler/icons-react";
+import { ImportGtkDialog } from "@/components/admin/import-gtk-dialog";
+import { IconPlus, IconPencil, IconTrash, IconEye, IconDownload, IconUpload } from "@tabler/icons-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -49,6 +50,7 @@ export default function GtkPage() {
   const [pagination, setPagination] = useState<Pagination | null>(null);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [editData, setEditData] = useState<Gtk | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
@@ -141,6 +143,10 @@ export default function GtkPage() {
             <IconDownload className="h-4 w-4 mr-2" />
             Export CSV
           </Button>
+          <Button variant="outline" onClick={() => setImportDialogOpen(true)}>
+            <IconUpload className="h-4 w-4 mr-2" />
+            Import Excel
+          </Button>
           <Button onClick={() => { setEditData(null); setDialogOpen(true); }}>
             <IconPlus className="h-4 w-4 mr-2" />
             Tambah GTK
@@ -178,6 +184,14 @@ export default function GtkPage() {
         data={editData}
         onSuccess={() => {
           setDialogOpen(false);
+          fetchData();
+        }}
+      />
+
+      <ImportGtkDialog
+        open={importDialogOpen}
+        onOpenChange={setImportDialogOpen}
+        onSuccess={() => {
           fetchData();
         }}
       />
