@@ -59,7 +59,7 @@ export default function LoginPage() {
           <CardTitle className="text-2xl">SIPODI</CardTitle>
           <CardDescription>Sistem Informasi Potensi Diri</CardDescription>
           <p className="text-xs text-muted-foreground mt-2">
-            Cabang Dinas Pendidikan Wilayah Malang<br />
+            Cabang Dinas Pendidikan <br/>Wilayah Malang<br />
             (Kota Malang - Kota Batu)
           </p>
         </CardHeader>
