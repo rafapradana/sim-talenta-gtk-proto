@@ -1,14 +1,7 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { db, sekolah } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import * as XLSX from "xlsx";
-
-interface ImportLog {
-  step: string;
-  status: "processing" | "success" | "error" | "skipped";
-  message: string;
-  data?: string;
-}
 
 function detectJenjang(nama: string): "SMA" | "SMK" | "SLB" {
   const namaUpper = nama.toUpperCase();
@@ -18,151 +11,130 @@ function detectJenjang(nama: string): "SMA" | "SMK" | "SLB" {
   if (namaUpper.includes("SLB") || namaUpper.includes("SDLB") || namaUpper.includes("SMPLB") || namaUpper.includes("SMALB")) {
     return "SLB";
   }
-  // Default to SMA for SMA, SMAN, MA, MAN, etc.
   return "SMA";
 }
 
 export async function POST(request: NextRequest) {
-  try {
-    const currentUser = await getCurrentUser();
-    if (!currentUser || currentUser.role !== "super_admin") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const formData = await request.formData();
-    const file = formData.get("file") as File | null;
-    const kota = formData.get("kota") as string;
-
-    const logs: ImportLog[] = [];
-
-    if (!file) {
-      return NextResponse.json({ error: "File tidak ditemukan", logs }, { status: 400 });
-    }
-
-    if (!kota || !["kota_malang", "kota_batu"].includes(kota)) {
-      return NextResponse.json({ error: "Pilih kota yang valid", logs }, { status: 400 });
-    }
-
-    logs.push({
-      step: "Memulai import",
-      status: "processing",
-      message: `File: ${file.name}, Kota: ${kota === "kota_malang" ? "Kota Malang" : "Kota Batu"}`,
+  const currentUser = await getCurrentUser();
+  if (!currentUser || currentUser.role !== "super_admin") {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), { 
+      status: 401,
+      headers: { "Content-Type": "application/json" }
     });
+  }
 
-    // Read Excel file
-    logs.push({
-      step: "Membaca file Excel",
-      status: "processing",
-      message: "Memproses file Excel...",
+  const formData = await request.formData();
+  const file = formData.get("file") as File | null;
+  const kota = formData.get("kota") as string;
+
+  if (!file) {
+    return new Response(JSON.stringify({ error: "File tidak ditemukan" }), { 
+      status: 400,
+      headers: { "Content-Type": "application/json" }
     });
+  }
 
-    const bytes = await file.arrayBuffer();
-    const workbook = XLSX.read(bytes, { type: "array" });
-    const sheetName = workbook.SheetNames[0];
-    const worksheet = workbook.Sheets[sheetName];
-    const jsonData = XLSX.utils.sheet_to_json(worksheet);
-
-    if (jsonData.length === 0) {
-      logs.push({
-        step: "Membaca file Excel",
-        status: "error",
-        message: "File Excel kosong",
-      });
-      return NextResponse.json({ error: "File Excel kosong", logs }, { status: 400 });
-    }
-
-    logs.push({
-      step: "Membaca file Excel",
-      status: "success",
-      message: `Ditemukan ${jsonData.length} baris data`,
+  if (!kota || !["kota_malang", "kota_batu"].includes(kota)) {
+    return new Response(JSON.stringify({ error: "Pilih kota yang valid" }), { 
+      status: 400,
+      headers: { "Content-Type": "application/json" }
     });
+  }
 
-    // Process each row
-    let imported = 0;
-    let skipped = 0;
-
-    for (let i = 0; i < jsonData.length; i++) {
-      const row: any = jsonData[i];
-      const rowNum = i + 2; // Excel row number (1-indexed + header)
-
-      // Handle different possible column names
-      const nama = (row["Nama Satuan Pendidikan"] || row["Nama Sekolah"] || row["nama"] || "").toString().trim();
-      const npsn = String(row["NPSN"] || row["npsn"] || "").trim();
-      const statusRaw = (row["Status Sekolah"] || row["Status"] || row["status"] || "").toString().toLowerCase();
-      const alamat = (row["Alamat"] || row["alamat"] || "").toString().trim();
-      const kepalaSekolah = (row["Nama Kepala Sekolah"] || row["Kepala Sekolah"] || row["kepala_sekolah"] || "").toString().trim();
-
-      if (!nama || !npsn) {
-        logs.push({
-          step: `Baris ${rowNum}`,
-          status: "skipped",
-          message: "Nama atau NPSN kosong, dilewati",
-        });
-        skipped++;
-        continue;
-      }
-
-      // Determine status
-      let status: "negeri" | "swasta" = "swasta";
-      if (statusRaw.includes("negeri")) {
-        status = "negeri";
-      }
-
-      // Detect jenjang from nama
-      const jenjang = detectJenjang(nama);
-
-      const data = {
-        nama,
-        npsn,
-        jenjang,
-        status,
-        kota: kota as "kota_malang" | "kota_batu",
-        alamat: alamat || "-",
-        kepalaSekolah: kepalaSekolah || null,
+  // Create streaming response
+  const encoder = new TextEncoder();
+  const stream = new ReadableStream({
+    async start(controller) {
+      const sendLog = (step: string, status: string, message: string, data?: string) => {
+        const log = JSON.stringify({ step, status, message, data }) + "\n";
+        controller.enqueue(encoder.encode(log));
       };
 
       try {
-        await db.insert(sekolah).values(data).onConflictDoNothing();
-        logs.push({
-          step: `Baris ${rowNum}`,
-          status: "success",
-          message: `"${nama}" berhasil diimport`,
-          data: `Jenjang: ${jenjang}, Status: ${status === "negeri" ? "Negeri" : "Swasta"}`,
-        });
-        imported++;
-      } catch (error: any) {
-        if (error.code === "23505") {
-          logs.push({
-            step: `Baris ${rowNum}`,
-            status: "skipped",
-            message: `"${nama}" sudah ada (NPSN: ${npsn})`,
-          });
-          skipped++;
-        } else {
-          logs.push({
-            step: `Baris ${rowNum}`,
-            status: "error",
-            message: `Gagal import "${nama}": ${error.message}`,
-          });
+        sendLog("Memulai import", "processing", `File: ${file.name}, Kota: ${kota === "kota_malang" ? "Kota Malang" : "Kota Batu"}`);
+
+        sendLog("Membaca file Excel", "processing", "Memproses file Excel...");
+
+        const bytes = await file.arrayBuffer();
+        const workbook = XLSX.read(bytes, { type: "array" });
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+        if (jsonData.length === 0) {
+          sendLog("Membaca file Excel", "error", "File Excel kosong");
+          sendLog("DONE", "error", JSON.stringify({ imported: 0, skipped: 0, total: 0 }));
+          controller.close();
+          return;
         }
+
+        sendLog("Membaca file Excel", "success", `Ditemukan ${jsonData.length} baris data`);
+
+        let imported = 0;
+        let skipped = 0;
+
+        for (let i = 0; i < jsonData.length; i++) {
+          const row: any = jsonData[i];
+          const rowNum = i + 2;
+
+          const nama = (row["Nama Satuan Pendidikan"] || row["Nama Sekolah"] || row["nama"] || "").toString().trim();
+          const npsn = String(row["NPSN"] || row["npsn"] || "").trim();
+          const statusRaw = (row["Status Sekolah"] || row["Status"] || row["status"] || "").toString().toLowerCase();
+          const alamat = (row["Alamat"] || row["alamat"] || "").toString().trim();
+          const kepalaSekolah = (row["Nama Kepala Sekolah"] || row["Kepala Sekolah"] || row["kepala_sekolah"] || "").toString().trim();
+
+          if (!nama || !npsn) {
+            sendLog(`Baris ${rowNum}`, "skipped", "Nama atau NPSN kosong, dilewati");
+            skipped++;
+            continue;
+          }
+
+          let status: "negeri" | "swasta" = "swasta";
+          if (statusRaw.includes("negeri")) {
+            status = "negeri";
+          }
+
+          const jenjang = detectJenjang(nama);
+
+          const data = {
+            nama,
+            npsn,
+            jenjang,
+            status,
+            kota: kota as "kota_malang" | "kota_batu",
+            alamat: alamat || "-",
+            kepalaSekolah: kepalaSekolah || null,
+          };
+
+          try {
+            await db.insert(sekolah).values(data).onConflictDoNothing();
+            sendLog(`Baris ${rowNum}`, "success", `"${nama}" berhasil diimport`, `Jenjang: ${jenjang}, Status: ${status === "negeri" ? "Negeri" : "Swasta"}`);
+            imported++;
+          } catch (error: any) {
+            if (error.code === "23505") {
+              sendLog(`Baris ${rowNum}`, "skipped", `"${nama}" sudah ada (NPSN: ${npsn})`);
+              skipped++;
+            } else {
+              sendLog(`Baris ${rowNum}`, "error", `Gagal import "${nama}": ${error.message}`);
+            }
+          }
+        }
+
+        sendLog("Selesai", "success", `Import selesai. Berhasil: ${imported}, Dilewati: ${skipped}`);
+        sendLog("DONE", "success", JSON.stringify({ imported, skipped, total: jsonData.length }));
+        controller.close();
+      } catch (error: any) {
+        sendLog("Error", "error", `Terjadi kesalahan: ${error.message}`);
+        sendLog("DONE", "error", JSON.stringify({ imported: 0, skipped: 0, total: 0 }));
+        controller.close();
       }
-    }
+    },
+  });
 
-    logs.push({
-      step: "Selesai",
-      status: "success",
-      message: `Import selesai. Berhasil: ${imported}, Dilewati: ${skipped}`,
-    });
-
-    return NextResponse.json({
-      message: "Import selesai",
-      imported,
-      skipped,
-      total: jsonData.length,
-      logs,
-    });
-  } catch (error: any) {
-    console.error("Import error:", error);
-    return NextResponse.json({ error: "Terjadi kesalahan saat import: " + error.message }, { status: 500 });
-  }
+  return new Response(stream, {
+    headers: {
+      "Content-Type": "text/plain; charset=utf-8",
+      "Transfer-Encoding": "chunked",
+    },
+  });
 }

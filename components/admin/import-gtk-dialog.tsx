@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -12,7 +12,6 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { IconLoader2, IconUpload, IconCheck, IconX, IconAlertCircle, IconPlayerSkipForward } from "@tabler/icons-react";
 
 interface ImportLog {
@@ -33,13 +32,19 @@ export function ImportGtkDialog({ open, onOpenChange, onSuccess }: ImportGtkDial
   const [file, setFile] = useState<File | null>(null);
   const [logs, setLogs] = useState<ImportLog[]>([]);
   const [result, setResult] = useState<{
-    message: string;
     sekolah?: string;
     imported: number;
     skipped: number;
     total: number;
   } | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll to bottom when new logs arrive
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [logs]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -58,40 +63,52 @@ export function ImportGtkDialog({ open, onOpenChange, onSuccess }: ImportGtkDial
         body: formData,
       });
 
-      const data = await res.json();
-
-      if (data.logs) {
-        setLogs(data.logs);
-      }
-
-      if (!res.ok) {
-        setResult({
-          message: data.error || "Terjadi kesalahan",
-          imported: 0,
-          skipped: 0,
-          total: 0,
-        });
+      if (!res.ok && !res.body) {
+        const data = await res.json();
+        setLogs([{ step: "Error", status: "error", message: data.error || "Terjadi kesalahan" }]);
+        setLoading(false);
         return;
       }
 
-      setResult({
-        message: data.message,
-        sekolah: data.sekolah,
-        imported: data.imported,
-        skipped: data.skipped,
-        total: data.total,
-      });
+      const reader = res.body?.getReader();
+      const decoder = new TextDecoder();
 
-      if (data.imported > 0) {
-        onSuccess();
+      if (!reader) {
+        setLogs([{ step: "Error", status: "error", message: "Tidak dapat membaca response" }]);
+        setLoading(false);
+        return;
       }
-    } catch {
-      setResult({
-        message: "Terjadi kesalahan koneksi",
-        imported: 0,
-        skipped: 0,
-        total: 0,
-      });
+
+      let buffer = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || "";
+
+        for (const line of lines) {
+          if (!line.trim()) continue;
+          try {
+            const log = JSON.parse(line);
+            if (log.step === "DONE") {
+              const resultData = JSON.parse(log.message);
+              setResult(resultData);
+              if (resultData.imported > 0) {
+                onSuccess();
+              }
+            } else {
+              setLogs((prev) => [...prev, log]);
+            }
+          } catch {
+            // Ignore parse errors
+          }
+        }
+      }
+    } catch (error) {
+      setLogs((prev) => [...prev, { step: "Error", status: "error", message: "Terjadi kesalahan koneksi" }]);
     } finally {
       setLoading(false);
     }
@@ -108,13 +125,13 @@ export function ImportGtkDialog({ open, onOpenChange, onSuccess }: ImportGtkDial
   function getStatusIcon(status: ImportLog["status"]) {
     switch (status) {
       case "processing":
-        return <IconLoader2 className="h-4 w-4 animate-spin text-blue-500" />;
+        return <IconLoader2 className="h-3 w-3 animate-spin text-blue-500 flex-shrink-0" />;
       case "success":
-        return <IconCheck className="h-4 w-4 text-green-500" />;
+        return <IconCheck className="h-3 w-3 text-green-500 flex-shrink-0" />;
       case "error":
-        return <IconX className="h-4 w-4 text-red-500" />;
+        return <IconX className="h-3 w-3 text-red-500 flex-shrink-0" />;
       case "skipped":
-        return <IconPlayerSkipForward className="h-4 w-4 text-yellow-500" />;
+        return <IconPlayerSkipForward className="h-3 w-3 text-yellow-500 flex-shrink-0" />;
       default:
         return null;
     }
@@ -137,7 +154,7 @@ export function ImportGtkDialog({ open, onOpenChange, onSuccess }: ImportGtkDial
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-2xl max-h-[90vh]">
+      <DialogContent className="sm:max-w-xl">
         <DialogHeader>
           <DialogTitle>Import Data GTK</DialogTitle>
           <DialogDescription>
@@ -171,32 +188,33 @@ export function ImportGtkDialog({ open, onOpenChange, onSuccess }: ImportGtkDial
 
           {logs.length > 0 && (
             <div className="space-y-2">
-              <Label>Log Proses Import</Label>
-              <ScrollArea className="h-64 border rounded-md p-2" ref={scrollRef}>
-                <div className="space-y-2">
-                  {logs.map((log, index) => (
-                    <div
-                      key={index}
-                      className={`flex items-start gap-2 p-2 rounded border text-sm ${getStatusColor(log.status)}`}
-                    >
-                      <div className="mt-0.5">{getStatusIcon(log.status)}</div>
-                      <div className="flex-1 min-w-0">
-                        <div className="font-medium">{log.step}</div>
-                        <div className="text-muted-foreground">{log.message}</div>
-                        {log.data && (
-                          <div className="text-xs text-muted-foreground mt-1">{log.data}</div>
-                        )}
-                      </div>
+              <Label>Log Proses Import ({logs.length} entries)</Label>
+              <div 
+                ref={scrollRef}
+                className="h-48 overflow-y-auto border rounded-md p-2 space-y-1 bg-muted/30"
+              >
+                {logs.map((log, index) => (
+                  <div
+                    key={index}
+                    className={`flex items-start gap-2 p-1.5 rounded border text-xs ${getStatusColor(log.status)}`}
+                  >
+                    <div className="mt-0.5">{getStatusIcon(log.status)}</div>
+                    <div className="flex-1 min-w-0 overflow-hidden">
+                      <span className="font-medium">{log.step}:</span>{" "}
+                      <span className="text-muted-foreground break-words">{log.message}</span>
+                      {log.data && (
+                        <span className="text-muted-foreground/70 block truncate">{log.data}</span>
+                      )}
                     </div>
-                  ))}
-                </div>
-              </ScrollArea>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
 
           {result && (
             <div
-              className={`p-4 rounded-md ${
+              className={`p-3 rounded-md text-sm ${
                 result.imported > 0
                   ? "bg-green-100 text-green-800 border border-green-200"
                   : "bg-red-100 text-red-800 border border-red-200"
@@ -204,31 +222,29 @@ export function ImportGtkDialog({ open, onOpenChange, onSuccess }: ImportGtkDial
             >
               <div className="flex items-center gap-2 font-medium">
                 {result.imported > 0 ? (
-                  <IconCheck className="h-5 w-5" />
+                  <IconCheck className="h-4 w-4" />
                 ) : (
-                  <IconAlertCircle className="h-5 w-5" />
+                  <IconAlertCircle className="h-4 w-4" />
                 )}
-                {result.message}
+                Import Selesai
               </div>
               {result.sekolah && (
-                <p className="mt-1 text-sm">Sekolah: {result.sekolah}</p>
+                <p className="mt-1 text-xs">Sekolah: {result.sekolah}</p>
               )}
-              {result.total > 0 && (
-                <div className="mt-2 text-sm grid grid-cols-3 gap-2">
-                  <div className="bg-white/50 rounded p-2 text-center">
-                    <div className="font-bold text-lg">{result.imported}</div>
-                    <div className="text-xs">Berhasil</div>
-                  </div>
-                  <div className="bg-white/50 rounded p-2 text-center">
-                    <div className="font-bold text-lg">{result.skipped}</div>
-                    <div className="text-xs">Dilewati</div>
-                  </div>
-                  <div className="bg-white/50 rounded p-2 text-center">
-                    <div className="font-bold text-lg">{result.total}</div>
-                    <div className="text-xs">Total</div>
-                  </div>
+              <div className="mt-2 grid grid-cols-3 gap-2 text-center">
+                <div className="bg-white/50 rounded p-2">
+                  <div className="font-bold">{result.imported}</div>
+                  <div className="text-xs">Berhasil</div>
                 </div>
-              )}
+                <div className="bg-white/50 rounded p-2">
+                  <div className="font-bold">{result.skipped}</div>
+                  <div className="text-xs">Dilewati</div>
+                </div>
+                <div className="bg-white/50 rounded p-2">
+                  <div className="font-bold">{result.total}</div>
+                  <div className="text-xs">Total</div>
+                </div>
+              </div>
             </div>
           )}
 
@@ -243,7 +259,7 @@ export function ImportGtkDialog({ open, onOpenChange, onSuccess }: ImportGtkDial
                 ) : (
                   <IconUpload className="h-4 w-4 mr-2" />
                 )}
-                Import
+                {loading ? "Mengimport..." : "Import"}
               </Button>
             )}
           </DialogFooter>
