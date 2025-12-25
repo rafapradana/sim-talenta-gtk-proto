@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DataTable } from "@/components/admin/data-table";
 import { SekolahDialog } from "@/components/admin/sekolah-dialog";
-import { IconPlus, IconPencil, IconTrash } from "@tabler/icons-react";
+import { IconPlus, IconPencil, IconTrash, IconDownload } from "@tabler/icons-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -117,10 +117,16 @@ export default function SekolahPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Manajemen Sekolah</h1>
-        <Button onClick={() => { setEditData(null); setDialogOpen(true); }}>
-          <IconPlus className="h-4 w-4 mr-2" />
-          Tambah Sekolah
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => window.open("/api/export/sekolah?format=csv", "_blank")}>
+            <IconDownload className="h-4 w-4 mr-2" />
+            Export CSV
+          </Button>
+          <Button onClick={() => { setEditData(null); setDialogOpen(true); }}>
+            <IconPlus className="h-4 w-4 mr-2" />
+            Tambah Sekolah
+          </Button>
+        </div>
       </div>
 
       <DataTable
