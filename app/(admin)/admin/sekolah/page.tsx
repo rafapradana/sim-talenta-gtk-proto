@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DataTable } from "@/components/admin/data-table";
 import { SekolahDialog } from "@/components/admin/sekolah-dialog";
-import { IconPlus, IconPencil, IconTrash, IconDownload } from "@tabler/icons-react";
+import { ImportSekolahDialog } from "@/components/admin/import-sekolah-dialog";
+import { IconPlus, IconPencil, IconTrash, IconDownload, IconUpload } from "@tabler/icons-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -22,8 +23,9 @@ interface Sekolah {
   nama: string;
   npsn: string;
   status: "negeri" | "swasta";
+  kota: "kota_malang" | "kota_batu";
   alamat: string;
-  kepalaSekolah?: { namaLengkap: string } | null;
+  kepalaSekolah?: string | null;
   gtkList?: { id: string }[];
 }
 
@@ -39,23 +41,26 @@ export default function SekolahPage() {
   const [pagination, setPagination] = useState<Pagination | null>(null);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [editData, setEditData] = useState<Sekolah | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("all");
+  const [kota, setKota] = useState("all");
 
   const fetchData = useCallback(async (page = 1) => {
     setLoading(true);
     const params = new URLSearchParams({ page: String(page), limit: "10" });
     if (search) params.set("search", search);
     if (status !== "all") params.set("status", status);
+    if (kota !== "all") params.set("kota", kota);
 
     const res = await fetch(`/api/sekolah?${params}`);
     const json = await res.json();
     setData(json.data || []);
     setPagination(json.pagination);
     setLoading(false);
-  }, [search, status]);
+  }, [search, status, kota]);
 
   useEffect(() => {
     fetchData();
@@ -81,9 +86,18 @@ export default function SekolahPage() {
       ),
     },
     {
+      key: "kota",
+      header: "Kota",
+      cell: (row: Sekolah) => (
+        <Badge variant="outline">
+          {row.kota === "kota_malang" ? "Kota Malang" : "Kota Batu"}
+        </Badge>
+      ),
+    },
+    {
       key: "kepalaSekolah",
       header: "Kepala Sekolah",
-      cell: (row: Sekolah) => row.kepalaSekolah?.namaLengkap || "-",
+      cell: (row: Sekolah) => row.kepalaSekolah || "-",
     },
     {
       key: "jumlahGtk",
@@ -122,6 +136,10 @@ export default function SekolahPage() {
             <IconDownload className="h-4 w-4 mr-2" />
             Export CSV
           </Button>
+          <Button variant="outline" onClick={() => setImportDialogOpen(true)}>
+            <IconUpload className="h-4 w-4 mr-2" />
+            Import Excel
+          </Button>
           <Button onClick={() => { setEditData(null); setDialogOpen(true); }}>
             <IconPlus className="h-4 w-4 mr-2" />
             Tambah Sekolah
@@ -138,6 +156,16 @@ export default function SekolahPage() {
         searchPlaceholder="Cari nama sekolah..."
         onSearch={setSearch}
         filters={[
+          {
+            key: "kota",
+            label: "Kota",
+            options: [
+              { value: "all", label: "Semua Kota" },
+              { value: "kota_malang", label: "Kota Malang" },
+              { value: "kota_batu", label: "Kota Batu" },
+            ],
+            onChange: setKota,
+          },
           {
             key: "status",
             label: "Status",
@@ -158,6 +186,14 @@ export default function SekolahPage() {
         data={editData}
         onSuccess={() => {
           setDialogOpen(false);
+          fetchData();
+        }}
+      />
+
+      <ImportSekolahDialog
+        open={importDialogOpen}
+        onOpenChange={setImportDialogOpen}
+        onSuccess={() => {
           fetchData();
         }}
       />

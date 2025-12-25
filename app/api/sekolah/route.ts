@@ -16,6 +16,7 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get("limit") || "10");
     const search = searchParams.get("search") || "";
     const status = searchParams.get("status") || "";
+    const kota = searchParams.get("kota") || "";
     const all = searchParams.get("all") === "true";
 
     const conditions = [];
@@ -25,13 +26,15 @@ export async function GET(request: NextRequest) {
     if (status && status !== "all") {
       conditions.push(eq(sekolah.status, status as "negeri" | "swasta"));
     }
+    if (kota && kota !== "all") {
+      conditions.push(eq(sekolah.kota, kota as "kota_malang" | "kota_batu"));
+    }
 
     const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
     if (all) {
       const data = await db.query.sekolah.findMany({
         where: whereClause,
-        with: { kepalaSekolah: true },
         orderBy: [desc(sekolah.createdAt)],
       });
       return NextResponse.json({ data });
@@ -42,7 +45,7 @@ export async function GET(request: NextRequest) {
     const [data, countResult] = await Promise.all([
       db.query.sekolah.findMany({
         where: whereClause,
-        with: { kepalaSekolah: true, gtkList: true },
+        with: { gtkList: true },
         orderBy: [desc(sekolah.createdAt)],
         limit,
         offset,
@@ -78,7 +81,7 @@ export async function POST(request: NextRequest) {
     const validation = createSekolahSchema.safeParse(body);
 
     if (!validation.success) {
-      return NextResponse.json({ error: validation.error.errors[0].message }, { status: 400 });
+      return NextResponse.json({ error: validation.error.issues[0].message }, { status: 400 });
     }
 
     const existing = await db.query.sekolah.findFirst({

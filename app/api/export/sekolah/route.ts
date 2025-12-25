@@ -7,6 +7,11 @@ const statusLabels: Record<string, string> = {
   swasta: "Swasta",
 };
 
+const kotaLabels: Record<string, string> = {
+  kota_malang: "Kota Malang",
+  kota_batu: "Kota Batu",
+};
+
 export async function GET(request: NextRequest) {
   try {
     const currentUser = await getCurrentUser();
@@ -19,7 +24,6 @@ export async function GET(request: NextRequest) {
 
     const data = await db.query.sekolah.findMany({
       with: {
-        kepalaSekolah: true,
         gtkList: true,
       },
     });
@@ -29,6 +33,7 @@ export async function GET(request: NextRequest) {
         "Nama Sekolah",
         "NPSN",
         "Status",
+        "Kota",
         "Alamat",
         "Kepala Sekolah",
         "Jumlah GTK",
@@ -38,8 +43,9 @@ export async function GET(request: NextRequest) {
         s.nama,
         s.npsn,
         statusLabels[s.status] || s.status,
-        s.alamat.replace(/"/g, '""'), // Escape quotes
-        s.kepalaSekolah?.namaLengkap || "-",
+        kotaLabels[s.kota] || s.kota,
+        s.alamat.replace(/"/g, '""'),
+        s.kepalaSekolah || "-",
         s.gtkList?.length || 0,
       ]);
 

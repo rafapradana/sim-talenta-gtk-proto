@@ -25,8 +25,9 @@ export const createSekolahSchema = z.object({
   nama: z.string().min(1, "Nama sekolah wajib diisi"),
   npsn: z.string().min(1, "NPSN wajib diisi"),
   status: z.enum(["negeri", "swasta"]),
+  kota: z.enum(["kota_malang", "kota_batu"]),
   alamat: z.string().min(1, "Alamat wajib diisi"),
-  kepalaSekolahId: z.string().uuid().optional().nullable(),
+  kepalaSekolah: z.string().optional().nullable(),
 });
 
 export const updateSekolahSchema = createSekolahSchema.partial();

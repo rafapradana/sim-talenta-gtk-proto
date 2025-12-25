@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,14 +14,9 @@ interface Sekolah {
   nama: string;
   npsn: string;
   status: "negeri" | "swasta";
+  kota: "kota_malang" | "kota_batu";
   alamat: string;
-  kepalaSekolahId?: string | null;
-}
-
-interface Gtk {
-  id: string;
-  namaLengkap: string;
-  jenis: string;
+  kepalaSekolah?: string | null;
 }
 
 interface SekolahDialogProps {
@@ -34,15 +29,6 @@ interface SekolahDialogProps {
 export function SekolahDialog({ open, onOpenChange, data, onSuccess }: SekolahDialogProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [kepalaSekolahList, setKepalaSekolahList] = useState<Gtk[]>([]);
-
-  useEffect(() => {
-    if (open) {
-      fetch("/api/gtk?all=true&jenis=kepala_sekolah")
-        .then((res) => res.json())
-        .then((json) => setKepalaSekolahList(json.data || []));
-    }
-  }, [open]);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -54,8 +40,9 @@ export function SekolahDialog({ open, onOpenChange, data, onSuccess }: SekolahDi
       nama: formData.get("nama"),
       npsn: formData.get("npsn"),
       status: formData.get("status"),
+      kota: formData.get("kota"),
       alamat: formData.get("alamat"),
-      kepalaSekolahId: formData.get("kepalaSekolahId") || null,
+      kepalaSekolah: formData.get("kepalaSekolah") || null,
     };
 
     try {
@@ -101,17 +88,32 @@ export function SekolahDialog({ open, onOpenChange, data, onSuccess }: SekolahDi
             <Input id="npsn" name="npsn" defaultValue={data?.npsn} required disabled={loading} />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="status">Status</Label>
-            <Select name="status" defaultValue={data?.status || "negeri"} disabled={loading}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="negeri">Negeri</SelectItem>
-                <SelectItem value="swasta">Swasta</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="status">Status</Label>
+              <Select name="status" defaultValue={data?.status || "negeri"} disabled={loading}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="negeri">Negeri</SelectItem>
+                  <SelectItem value="swasta">Swasta</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="kota">Kota</Label>
+              <Select name="kota" defaultValue={data?.kota || "kota_malang"} disabled={loading}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="kota_malang">Kota Malang</SelectItem>
+                  <SelectItem value="kota_batu">Kota Batu</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           <div className="space-y-2">
@@ -120,20 +122,14 @@ export function SekolahDialog({ open, onOpenChange, data, onSuccess }: SekolahDi
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="kepalaSekolahId">Kepala Sekolah</Label>
-            <Select name="kepalaSekolahId" defaultValue={data?.kepalaSekolahId || ""} disabled={loading}>
-              <SelectTrigger>
-                <SelectValue placeholder="Pilih Kepala Sekolah" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="">Tidak ada</SelectItem>
-                {kepalaSekolahList.map((ks) => (
-                  <SelectItem key={ks.id} value={ks.id}>
-                    {ks.namaLengkap}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Label htmlFor="kepalaSekolah">Kepala Sekolah</Label>
+            <Input
+              id="kepalaSekolah"
+              name="kepalaSekolah"
+              defaultValue={data?.kepalaSekolah || ""}
+              placeholder="Nama Kepala Sekolah"
+              disabled={loading}
+            />
           </div>
 
           <DialogFooter>

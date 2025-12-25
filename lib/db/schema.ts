@@ -6,6 +6,7 @@ export const userRoleEnum = pgEnum("user_role", ["super_admin", "admin_sekolah",
 export const jenisGtkEnum = pgEnum("jenis_gtk", ["guru", "tendik", "kepala_sekolah"]);
 export const kelaminEnum = pgEnum("kelamin", ["L", "P"]);
 export const statusSekolahEnum = pgEnum("status_sekolah", ["negeri", "swasta"]);
+export const kotaEnum = pgEnum("kota", ["kota_malang", "kota_batu"]);
 export const jenisTalentaEnum = pgEnum("jenis_talenta", ["peserta_pelatihan", "pembimbing_lomba", "peserta_lomba", "minat_bakat"]);
 export const jenjangLombaEnum = pgEnum("jenjang_lomba", ["kota", "provinsi", "nasional", "internasional"]);
 export const bidangLombaEnum = pgEnum("bidang_lomba", ["akademik", "inovasi", "teknologi", "sosial", "seni", "kepemimpinan"]);
@@ -27,8 +28,9 @@ export const sekolah = pgTable("sekolah", {
   nama: varchar("nama", { length: 255 }).notNull(),
   npsn: varchar("npsn", { length: 20 }).notNull().unique(),
   status: statusSekolahEnum("status").notNull(),
+  kota: kotaEnum("kota").notNull(),
   alamat: text("alamat").notNull(),
-  kepalaSekolahId: uuid("kepala_sekolah_id"),
+  kepalaSekolah: varchar("kepala_sekolah", { length: 255 }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -89,8 +91,7 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   refreshTokens: many(refreshTokens),
 }));
 
-export const sekolahRelations = relations(sekolah, ({ one, many }) => ({
-  kepalaSekolah: one(gtk, { fields: [sekolah.kepalaSekolahId], references: [gtk.id] }),
+export const sekolahRelations = relations(sekolah, ({ many }) => ({
   gtkList: many(gtk),
 }));
 
