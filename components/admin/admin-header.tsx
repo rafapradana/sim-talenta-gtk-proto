@@ -9,7 +9,7 @@ export function AdminHeader() {
       <SidebarTrigger />
       <Separator orientation="vertical" className="h-6" />
       <div className="flex-1">
-        <h1 className="text-sm font-medium">Sistem Informasi Manajemen Talenta GTK</h1>
+        <h1 className="text-sm font-medium">SIPODI (Sistem Informasi Potensi Diri)</h1>
       </div>
     </header>
   );
