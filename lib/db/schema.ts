@@ -7,6 +7,7 @@ export const jenisGtkEnum = pgEnum("jenis_gtk", ["guru", "tendik", "kepala_sekol
 export const kelaminEnum = pgEnum("kelamin", ["L", "P"]);
 export const statusSekolahEnum = pgEnum("status_sekolah", ["negeri", "swasta"]);
 export const kotaEnum = pgEnum("kota", ["kota_malang", "kota_batu"]);
+export const jenjangSekolahEnum = pgEnum("jenjang_sekolah", ["SMA", "SMK", "SLB"]);
 export const jenisTalentaEnum = pgEnum("jenis_talenta", ["peserta_pelatihan", "pembimbing_lomba", "peserta_lomba", "minat_bakat"]);
 export const jenjangLombaEnum = pgEnum("jenjang_lomba", ["kota", "provinsi", "nasional", "internasional"]);
 export const bidangLombaEnum = pgEnum("bidang_lomba", ["akademik", "inovasi", "teknologi", "sosial", "seni", "kepemimpinan"]);
@@ -27,6 +28,7 @@ export const sekolah = pgTable("sekolah", {
   id: uuid("id").defaultRandom().primaryKey(),
   nama: varchar("nama", { length: 255 }).notNull(),
   npsn: varchar("npsn", { length: 20 }).notNull().unique(),
+  jenjang: jenjangSekolahEnum("jenjang").notNull(),
   status: statusSekolahEnum("status").notNull(),
   kota: kotaEnum("kota").notNull(),
   alamat: text("alamat").notNull(),

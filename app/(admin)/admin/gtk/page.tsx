@@ -58,7 +58,7 @@ export default function GtkPage() {
 
   const fetchData = useCallback(async (page = 1) => {
     setLoading(true);
-    const params = new URLSearchParams({ page: String(page), limit: "10" });
+    const params = new URLSearchParams({ page: String(page), limit: "40" });
     if (search) params.set("search", search);
     if (jenis !== "all") params.set("jenis", jenis);
 

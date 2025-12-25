@@ -14,6 +14,7 @@ DROP TYPE IF EXISTS jenis_gtk CASCADE;
 DROP TYPE IF EXISTS kelamin CASCADE;
 DROP TYPE IF EXISTS status_sekolah CASCADE;
 DROP TYPE IF EXISTS kota CASCADE;
+DROP TYPE IF EXISTS jenjang_sekolah CASCADE;
 DROP TYPE IF EXISTS jenis_talenta CASCADE;
 DROP TYPE IF EXISTS jenjang_lomba CASCADE;
 DROP TYPE IF EXISTS bidang_lomba CASCADE;
@@ -27,6 +28,7 @@ CREATE TYPE jenis_gtk AS ENUM ('guru', 'tendik', 'kepala_sekolah');
 CREATE TYPE kelamin AS ENUM ('L', 'P');
 CREATE TYPE status_sekolah AS ENUM ('negeri', 'swasta');
 CREATE TYPE kota AS ENUM ('kota_malang', 'kota_batu');
+CREATE TYPE jenjang_sekolah AS ENUM ('SMA', 'SMK', 'SLB');
 CREATE TYPE jenis_talenta AS ENUM ('peserta_pelatihan', 'pembimbing_lomba', 'peserta_lomba', 'minat_bakat');
 CREATE TYPE jenjang_lomba AS ENUM ('kota', 'provinsi', 'nasional', 'internasional');
 CREATE TYPE bidang_lomba AS ENUM ('akademik', 'inovasi', 'teknologi', 'sosial', 'seni', 'kepemimpinan');
@@ -51,6 +53,7 @@ CREATE TABLE sekolah (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     nama VARCHAR(255) NOT NULL,
     npsn VARCHAR(20) NOT NULL UNIQUE,
+    jenjang jenjang_sekolah NOT NULL,
     status status_sekolah NOT NULL,
     kota kota NOT NULL,
     alamat TEXT NOT NULL,
@@ -115,6 +118,7 @@ CREATE TABLE refresh_tokens (
 -- =============================================
 
 CREATE INDEX idx_users_email ON users(email);
+CREATE INDEX idx_sekolah_jenjang ON sekolah(jenjang);
 CREATE INDEX idx_sekolah_kota ON sekolah(kota);
 CREATE INDEX idx_sekolah_status ON sekolah(status);
 CREATE INDEX idx_gtk_user_id ON gtk(user_id);
@@ -139,10 +143,10 @@ VALUES (
 );
 
 -- Sample Sekolah
-INSERT INTO sekolah (id, nama, npsn, status, kota, alamat, kepala_sekolah)
+INSERT INTO sekolah (id, nama, npsn, jenjang, status, kota, alamat, kepala_sekolah)
 VALUES 
-    ('b1eebc99-9c0b-4ef8-bb6d-6bb9bd380a22', 'SMAN 1 Malang', '20536421', 'negeri', 'kota_malang', 'Jl. Tugu No. 1, Malang', 'Dr. Budi Santoso, M.Pd'),
-    ('b2eebc99-9c0b-4ef8-bb6d-6bb9bd380a33', 'SMKN 4 Malang', '20536422', 'negeri', 'kota_malang', 'Jl. Tanimbar No. 22, Malang', 'Drs. Ahmad Yani, M.M');
+    ('b1eebc99-9c0b-4ef8-bb6d-6bb9bd380a22', 'SMAN 1 Malang', '20536421', 'SMA', 'negeri', 'kota_malang', 'Jl. Tugu No. 1, Malang', 'Dr. Budi Santoso, M.Pd'),
+    ('b2eebc99-9c0b-4ef8-bb6d-6bb9bd380a33', 'SMKN 4 Malang', '20536422', 'SMK', 'negeri', 'kota_malang', 'Jl. Tanimbar No. 22, Malang', 'Drs. Ahmad Yani, M.M');
 
 -- =============================================
 -- DONE

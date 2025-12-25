@@ -13,6 +13,7 @@ interface Sekolah {
   id: string;
   nama: string;
   npsn: string;
+  jenjang: "SMA" | "SMK" | "SLB";
   status: "negeri" | "swasta";
   kota: "kota_malang" | "kota_batu";
   alamat: string;
@@ -39,6 +40,7 @@ export function SekolahDialog({ open, onOpenChange, data, onSuccess }: SekolahDi
     const body = {
       nama: formData.get("nama"),
       npsn: formData.get("npsn"),
+      jenjang: formData.get("jenjang"),
       status: formData.get("status"),
       kota: formData.get("kota"),
       alamat: formData.get("alamat"),
@@ -88,7 +90,21 @@ export function SekolahDialog({ open, onOpenChange, data, onSuccess }: SekolahDi
             <Input id="npsn" name="npsn" defaultValue={data?.npsn} required disabled={loading} />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="jenjang">Jenjang</Label>
+              <Select name="jenjang" defaultValue={data?.jenjang || "SMA"} disabled={loading}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="SMA">SMA</SelectItem>
+                  <SelectItem value="SMK">SMK</SelectItem>
+                  <SelectItem value="SLB">SLB</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
             <div className="space-y-2">
               <Label htmlFor="status">Status</Label>
               <Select name="status" defaultValue={data?.status || "negeri"} disabled={loading}>

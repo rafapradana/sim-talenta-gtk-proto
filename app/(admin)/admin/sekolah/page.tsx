@@ -22,6 +22,7 @@ interface Sekolah {
   id: string;
   nama: string;
   npsn: string;
+  jenjang: "SMA" | "SMK" | "SLB";
   status: "negeri" | "swasta";
   kota: "kota_malang" | "kota_batu";
   alamat: string;
@@ -47,20 +48,22 @@ export default function SekolahPage() {
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("all");
   const [kota, setKota] = useState("all");
+  const [jenjang, setJenjang] = useState("all");
 
   const fetchData = useCallback(async (page = 1) => {
     setLoading(true);
-    const params = new URLSearchParams({ page: String(page), limit: "10" });
+    const params = new URLSearchParams({ page: String(page), limit: "40" });
     if (search) params.set("search", search);
     if (status !== "all") params.set("status", status);
     if (kota !== "all") params.set("kota", kota);
+    if (jenjang !== "all") params.set("jenjang", jenjang);
 
     const res = await fetch(`/api/sekolah?${params}`);
     const json = await res.json();
     setData(json.data || []);
     setPagination(json.pagination);
     setLoading(false);
-  }, [search, status, kota]);
+  }, [search, status, kota, jenjang]);
 
   useEffect(() => {
     fetchData();
@@ -76,6 +79,13 @@ export default function SekolahPage() {
   const columns = [
     { key: "nama", header: "Nama Sekolah", cell: (row: Sekolah) => row.nama },
     { key: "npsn", header: "NPSN", cell: (row: Sekolah) => row.npsn },
+    {
+      key: "jenjang",
+      header: "Jenjang",
+      cell: (row: Sekolah) => (
+        <Badge variant="outline">{row.jenjang}</Badge>
+      ),
+    },
     {
       key: "status",
       header: "Status",
@@ -156,6 +166,17 @@ export default function SekolahPage() {
         searchPlaceholder="Cari nama sekolah..."
         onSearch={setSearch}
         filters={[
+          {
+            key: "jenjang",
+            label: "Jenjang",
+            options: [
+              { value: "all", label: "Semua Jenjang" },
+              { value: "SMA", label: "SMA" },
+              { value: "SMK", label: "SMK" },
+              { value: "SLB", label: "SLB" },
+            ],
+            onChange: setJenjang,
+          },
           {
             key: "kota",
             label: "Kota",

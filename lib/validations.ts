@@ -24,6 +24,7 @@ export const updateUserSchema = z.object({
 export const createSekolahSchema = z.object({
   nama: z.string().min(1, "Nama sekolah wajib diisi"),
   npsn: z.string().min(1, "NPSN wajib diisi"),
+  jenjang: z.enum(["SMA", "SMK", "SLB"]),
   status: z.enum(["negeri", "swasta"]),
   kota: z.enum(["kota_malang", "kota_batu"]),
   alamat: z.string().min(1, "Alamat wajib diisi"),

@@ -17,6 +17,7 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get("search") || "";
     const status = searchParams.get("status") || "";
     const kota = searchParams.get("kota") || "";
+    const jenjang = searchParams.get("jenjang") || "";
     const all = searchParams.get("all") === "true";
 
     const conditions = [];
@@ -28,6 +29,9 @@ export async function GET(request: NextRequest) {
     }
     if (kota && kota !== "all") {
       conditions.push(eq(sekolah.kota, kota as "kota_malang" | "kota_batu"));
+    }
+    if (jenjang && jenjang !== "all") {
+      conditions.push(eq(sekolah.jenjang, jenjang as "SMA" | "SMK" | "SLB"));
     }
 
     const whereClause = conditions.length > 0 ? and(...conditions) : undefined;

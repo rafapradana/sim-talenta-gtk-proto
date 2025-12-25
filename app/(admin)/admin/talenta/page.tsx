@@ -47,7 +47,7 @@ export default function TalentaPage() {
 
   const fetchData = useCallback(async (page = 1) => {
     setLoading(true);
-    const params = new URLSearchParams({ page: String(page), limit: "10" });
+    const params = new URLSearchParams({ page: String(page), limit: "40" });
     if (jenis !== "all") params.set("jenis", jenis);
     if (verified !== "all") params.set("verified", verified);
 
