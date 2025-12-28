@@ -31,7 +31,9 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 interface GtkOption {
   id: string;
   namaLengkap: string;
+  nuptk: string;
   sekolah: string;
+  jenis: string;
   foto: string;
 }
 
@@ -63,29 +65,32 @@ const jenisLabels: Record<string, string> = {
 const bidangOptions = ["Akademik", "Inovasi", "Teknologi", "Sosial", "Seni", "Sastra", "Kepemimpinan", "Lainnya"];
 const jenjangOptions = ["Kota", "Provinsi", "Nasional", "Internasional"];
 
-// ========== FAKE GTK DATA WITH PHOTOS ==========
-const gtkList: GtkOption[] = [
-  { id: "gtk-1", namaLengkap: "Ahmad Suryanto, S.Pd.", sekolah: "SMAN 1 Malang", foto: "https://api.dicebear.com/7.x/avataaars/svg?seed=Ahmad" },
-  { id: "gtk-2", namaLengkap: "Siti Rahayu, M.Pd.", sekolah: "SMAN 3 Malang", foto: "https://api.dicebear.com/7.x/avataaars/svg?seed=Siti" },
-  { id: "gtk-3", namaLengkap: "Budi Santoso", sekolah: "SMKN 2 Malang", foto: "https://api.dicebear.com/7.x/avataaars/svg?seed=Budi" },
-  { id: "gtk-4", namaLengkap: "Dr. Handayani, M.Si.", sekolah: "SMAN 5 Malang", foto: "https://api.dicebear.com/7.x/avataaars/svg?seed=Handayani" },
-  { id: "gtk-5", namaLengkap: "Dewi Lestari, S.Kom.", sekolah: "SMKN 4 Malang", foto: "https://api.dicebear.com/7.x/avataaars/svg?seed=Dewi" },
-  { id: "gtk-6", namaLengkap: "Agus Wijaya, S.Pd.", sekolah: "SMAN 8 Malang", foto: "https://api.dicebear.com/7.x/avataaars/svg?seed=Agus" },
-  { id: "gtk-7", namaLengkap: "Rina Kartika, M.Hum.", sekolah: "SMAN 10 Malang", foto: "https://api.dicebear.com/7.x/avataaars/svg?seed=Rina" },
-  { id: "gtk-8", namaLengkap: "Joko Susilo", sekolah: "SMKN 6 Malang", foto: "https://api.dicebear.com/7.x/avataaars/svg?seed=Joko" },
-  { id: "gtk-9", namaLengkap: "Ani Widya, S.Pd.", sekolah: "SMAN 1 Batu", foto: "https://api.dicebear.com/7.x/avataaars/svg?seed=Ani" },
-  { id: "gtk-10", namaLengkap: "Bambang Prasetyo, M.Pd.", sekolah: "SMKN 8 Malang", foto: "https://api.dicebear.com/7.x/avataaars/svg?seed=Bambang" },
-  { id: "gtk-11", namaLengkap: "Endang Purwati, S.Si.", sekolah: "SMAN 2 Batu", foto: "https://api.dicebear.com/7.x/avataaars/svg?seed=Endang" },
-  { id: "gtk-12", namaLengkap: "Heru Prabowo", sekolah: "SMKN 11 Malang", foto: "https://api.dicebear.com/7.x/avataaars/svg?seed=Heru" },
-  { id: "gtk-13", namaLengkap: "Maya Sari, S.Pd.", sekolah: "SLBN 1 Malang", foto: "https://api.dicebear.com/7.x/avataaars/svg?seed=Maya" },
-  { id: "gtk-14", namaLengkap: "Dedi Kurniawan", sekolah: "SMKN 1 Batu", foto: "https://api.dicebear.com/7.x/avataaars/svg?seed=Dedi" },
-  { id: "gtk-15", namaLengkap: "Ika Susanti, M.Pd.", sekolah: "SMAN 5 Malang", foto: "https://api.dicebear.com/7.x/avataaars/svg?seed=Ika" },
-  { id: "gtk-16", namaLengkap: "Rudi Hartono, S.Pd.", sekolah: "SMAN 3 Malang", foto: "https://api.dicebear.com/7.x/avataaars/svg?seed=Rudi" },
-  { id: "gtk-17", namaLengkap: "Sri Wahyuni", sekolah: "SMKN 4 Malang", foto: "https://api.dicebear.com/7.x/avataaars/svg?seed=Sri" },
-  { id: "gtk-18", namaLengkap: "Eko Prasetya, M.Pd.", sekolah: "SMAN 1 Malang", foto: "https://api.dicebear.com/7.x/avataaars/svg?seed=Eko" },
-  { id: "gtk-19", namaLengkap: "Nita Fitriani, S.Kom.", sekolah: "SMKN 2 Malang", foto: "https://api.dicebear.com/7.x/avataaars/svg?seed=Nita" },
-  { id: "gtk-20", namaLengkap: "Yanto Wibowo", sekolah: "SMAN 8 Malang", foto: "https://api.dicebear.com/7.x/avataaars/svg?seed=Yanto" },
-];
+// ========== FAKE GTK DATA WITH PHOTOS (50 entries) ==========
+const gtkList: GtkOption[] = Array.from({ length: 50 }, (_, i) => ({
+  id: `gtk-${i + 1}`,
+  namaLengkap: [
+    "Ahmad Suryanto, S.Pd.", "Siti Rahayu, M.Pd.", "Budi Santoso", "Dr. Handayani, M.Si.",
+    "Dewi Lestari, S.Kom.", "Agus Wijaya, S.Pd.", "Rina Kartika, M.Hum.", "Joko Susilo",
+    "Ani Widya, S.Pd.", "Bambang Prasetyo, M.Pd.", "Endang Purwati, S.Si.", "Heru Prabowo",
+    "Maya Sari, S.Pd.", "Dedi Kurniawan", "Ika Susanti, M.Pd.", "Rudi Hartono, S.Pd.",
+    "Sri Wahyuni", "Eko Prasetya, M.Pd.", "Nita Fitriani, S.Kom.", "Yanto Wibowo",
+    "Ratna Dewi, S.Pd.", "Tono Wijaya", "Linda Sari, M.Pd.", "Andi Prasetyo, S.T.",
+    "Wulan Sari", "Didik Hartono, S.Pd.", "Erni Susanti", "Fajar Nugroho, M.Pd.",
+    "Gita Permata, S.Si.", "Hadi Susanto", "Indra Wijaya, S.Pd.", "Juwita Sari, M.Pd.",
+    "Kusuma Dewi", "Lestari Ningrum, S.Pd.", "Mulyono, S.T.", "Nurhayati, M.Pd.",
+    "Oktaviani, S.Kom.", "Prasetyo Adi", "Qomariyah, S.Pd.", "Rahmat Hidayat",
+    "Susanto, M.Pd.", "Tuti Wulandari", "Umar Faruq, S.Pd.", "Vina Amelia",
+    "Wahyu Santoso, M.Pd.", "Xaverius Slamet", "Yuli Astuti, S.Pd.", "Zainal Abidin",
+    "Aisyah Putri, S.Pd.", "Bayu Setiawan, M.Pd.",
+  ][i % 50],
+  nuptk: `${1234567890 + i}`,
+  sekolah: [
+    "SMAN 1 Malang", "SMAN 3 Malang", "SMAN 5 Malang", "SMKN 2 Malang", "SMKN 4 Malang",
+    "SMAN 8 Malang", "SMAN 10 Malang", "SMKN 6 Malang", "SMAN 1 Batu", "SMKN 8 Malang",
+  ][i % 10],
+  jenis: ["Guru", "Tendik", "Kepala Sekolah"][i % 3],
+  foto: `https://api.dicebear.com/7.x/avataaars/svg?seed=gtk${i + 1}`,
+}));
 
 const sekolahNames = [
   "SMAN 1 Malang", "SMAN 3 Malang", "SMAN 5 Malang", "SMAN 8 Malang", "SMAN 10 Malang",
@@ -166,9 +171,16 @@ export default function TalentaPage() {
     return gtkList.filter(
       (gtk) =>
         gtk.namaLengkap.toLowerCase().includes(searchLower) ||
-        gtk.sekolah.toLowerCase().includes(searchLower)
+        gtk.sekolah.toLowerCase().includes(searchLower) ||
+        gtk.nuptk.includes(gtkSearch)
     );
   }, [gtkSearch]);
+
+  // Get selected GTK name for display
+  const selectedGtkData = useMemo(() => {
+    if (!formGtk) return null;
+    return gtkList.find(g => g.id === formGtk);
+  }, [formGtk]);
 
   const limit = 20;
 
@@ -356,11 +368,28 @@ export default function TalentaPage() {
           <form className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="gtk">GTK</Label>
-              <Combobox value={formGtk} onValueChange={(v) => v && setFormGtk(v)}>
+              <Combobox
+                value={formGtk}
+                onValueChange={(v) => {
+                  if (v) {
+                    setFormGtk(v);
+                    // Set search to selected name
+                    const selected = gtkList.find(g => g.id === v);
+                    if (selected) setGtkSearch(selected.namaLengkap);
+                  }
+                }}
+              >
                 <ComboboxInput
                   placeholder="Cari nama GTK..."
                   className="w-full"
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setGtkSearch(e.target.value)}
+                  value={gtkSearch}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                    setGtkSearch(e.target.value);
+                    // Clear selection if user is typing something new
+                    if (formGtk && gtkSearch !== e.target.value) {
+                      setFormGtk("");
+                    }
+                  }}
                 />
                 <ComboboxContent>
                   <ComboboxList>
@@ -374,7 +403,7 @@ export default function TalentaPage() {
                           </Avatar>
                           <div>
                             <p className="text-sm font-medium">{gtk.namaLengkap}</p>
-                            <p className="text-xs text-muted-foreground">{gtk.sekolah}</p>
+                            <p className="text-xs text-muted-foreground">{gtk.sekolah} • {gtk.nuptk}</p>
                           </div>
                         </div>
                       </ComboboxItem>
