@@ -1,11 +1,39 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DataTable } from "@/components/admin/data-table";
-import { IconCheck, IconX, IconExternalLink, IconDownload } from "@tabler/icons-react";
+import { IconCheck, IconX, IconExternalLink, IconDownload, IconPlus } from "@tabler/icons-react";
 import Link from "next/link";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Combobox,
+  ComboboxInput,
+  ComboboxContent,
+  ComboboxList,
+  ComboboxItem,
+  ComboboxEmpty,
+} from "@/components/ui/combobox";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+
+interface GtkOption {
+  id: string;
+  namaLengkap: string;
+  sekolah: string;
+  foto: string;
+}
 
 interface Talenta {
   id: string;
@@ -20,15 +48,9 @@ interface Talenta {
   gtk?: {
     id: string;
     namaLengkap: string;
+    foto?: string;
     sekolah?: { nama: string } | null;
   };
-}
-
-interface Pagination {
-  page: number;
-  limit: number;
-  total: number;
-  totalPages: number;
 }
 
 const jenisLabels: Record<string, string> = {
@@ -38,35 +60,160 @@ const jenisLabels: Record<string, string> = {
   minat_bakat: "Minat/Bakat",
 };
 
+const bidangOptions = ["Akademik", "Inovasi", "Teknologi", "Sosial", "Seni", "Sastra", "Kepemimpinan", "Lainnya"];
+const jenjangOptions = ["Kota", "Provinsi", "Nasional", "Internasional"];
+
+// ========== FAKE GTK DATA WITH PHOTOS ==========
+const gtkList: GtkOption[] = [
+  { id: "gtk-1", namaLengkap: "Ahmad Suryanto, S.Pd.", sekolah: "SMAN 1 Malang", foto: "https://api.dicebear.com/7.x/avataaars/svg?seed=Ahmad" },
+  { id: "gtk-2", namaLengkap: "Siti Rahayu, M.Pd.", sekolah: "SMAN 3 Malang", foto: "https://api.dicebear.com/7.x/avataaars/svg?seed=Siti" },
+  { id: "gtk-3", namaLengkap: "Budi Santoso", sekolah: "SMKN 2 Malang", foto: "https://api.dicebear.com/7.x/avataaars/svg?seed=Budi" },
+  { id: "gtk-4", namaLengkap: "Dr. Handayani, M.Si.", sekolah: "SMAN 5 Malang", foto: "https://api.dicebear.com/7.x/avataaars/svg?seed=Handayani" },
+  { id: "gtk-5", namaLengkap: "Dewi Lestari, S.Kom.", sekolah: "SMKN 4 Malang", foto: "https://api.dicebear.com/7.x/avataaars/svg?seed=Dewi" },
+  { id: "gtk-6", namaLengkap: "Agus Wijaya, S.Pd.", sekolah: "SMAN 8 Malang", foto: "https://api.dicebear.com/7.x/avataaars/svg?seed=Agus" },
+  { id: "gtk-7", namaLengkap: "Rina Kartika, M.Hum.", sekolah: "SMAN 10 Malang", foto: "https://api.dicebear.com/7.x/avataaars/svg?seed=Rina" },
+  { id: "gtk-8", namaLengkap: "Joko Susilo", sekolah: "SMKN 6 Malang", foto: "https://api.dicebear.com/7.x/avataaars/svg?seed=Joko" },
+  { id: "gtk-9", namaLengkap: "Ani Widya, S.Pd.", sekolah: "SMAN 1 Batu", foto: "https://api.dicebear.com/7.x/avataaars/svg?seed=Ani" },
+  { id: "gtk-10", namaLengkap: "Bambang Prasetyo, M.Pd.", sekolah: "SMKN 8 Malang", foto: "https://api.dicebear.com/7.x/avataaars/svg?seed=Bambang" },
+  { id: "gtk-11", namaLengkap: "Endang Purwati, S.Si.", sekolah: "SMAN 2 Batu", foto: "https://api.dicebear.com/7.x/avataaars/svg?seed=Endang" },
+  { id: "gtk-12", namaLengkap: "Heru Prabowo", sekolah: "SMKN 11 Malang", foto: "https://api.dicebear.com/7.x/avataaars/svg?seed=Heru" },
+  { id: "gtk-13", namaLengkap: "Maya Sari, S.Pd.", sekolah: "SLBN 1 Malang", foto: "https://api.dicebear.com/7.x/avataaars/svg?seed=Maya" },
+  { id: "gtk-14", namaLengkap: "Dedi Kurniawan", sekolah: "SMKN 1 Batu", foto: "https://api.dicebear.com/7.x/avataaars/svg?seed=Dedi" },
+  { id: "gtk-15", namaLengkap: "Ika Susanti, M.Pd.", sekolah: "SMAN 5 Malang", foto: "https://api.dicebear.com/7.x/avataaars/svg?seed=Ika" },
+  { id: "gtk-16", namaLengkap: "Rudi Hartono, S.Pd.", sekolah: "SMAN 3 Malang", foto: "https://api.dicebear.com/7.x/avataaars/svg?seed=Rudi" },
+  { id: "gtk-17", namaLengkap: "Sri Wahyuni", sekolah: "SMKN 4 Malang", foto: "https://api.dicebear.com/7.x/avataaars/svg?seed=Sri" },
+  { id: "gtk-18", namaLengkap: "Eko Prasetya, M.Pd.", sekolah: "SMAN 1 Malang", foto: "https://api.dicebear.com/7.x/avataaars/svg?seed=Eko" },
+  { id: "gtk-19", namaLengkap: "Nita Fitriani, S.Kom.", sekolah: "SMKN 2 Malang", foto: "https://api.dicebear.com/7.x/avataaars/svg?seed=Nita" },
+  { id: "gtk-20", namaLengkap: "Yanto Wibowo", sekolah: "SMAN 8 Malang", foto: "https://api.dicebear.com/7.x/avataaars/svg?seed=Yanto" },
+];
+
+const sekolahNames = [
+  "SMAN 1 Malang", "SMAN 3 Malang", "SMAN 5 Malang", "SMAN 8 Malang", "SMAN 10 Malang",
+  "SMKN 2 Malang", "SMKN 4 Malang", "SMKN 6 Malang", "SMKN 8 Malang", "SMKN 11 Malang",
+  "SMAN 1 Batu", "SMAN 2 Batu", "SMKN 1 Batu", "SLBN 1 Malang", "SLBN Pembina Malang",
+];
+
+const kegiatanNames = [
+  "Workshop Kurikulum Merdeka", "Pelatihan Pembelajaran Digital", "Diklat Guru Penggerak",
+  "Seminar Pendidikan Inklusi", "Workshop Project Based Learning", "Pelatihan HOTS Assessment",
+  "Diklat Kepemimpinan", "Workshop Blended Learning", "Pelatihan ICT untuk Guru",
+];
+
+const lombaNames = [
+  "Olimpiade Sains Nasional", "Lomba Karya Ilmiah Remaja", "Festival Seni Pelajar",
+  "Lomba Debat Bahasa Inggris", "Kompetisi Robotik", "Lomba Inovasi Teknologi",
+  "Olimpiade Matematika", "Lomba Cerdas Cermat", "Festival Film Pendek",
+];
+
+const prestasiOptions = ["Juara 1", "Juara 2", "Juara 3", "Harapan 1", "Harapan 2", "Finalis", "Peserta Terbaik"];
+
+function generateFakeData(count: number): Talenta[] {
+  const data: Talenta[] = [];
+  const jenisTypes = ["peserta_pelatihan", "pembimbing_lomba", "peserta_lomba", "minat_bakat"];
+
+  for (let i = 0; i < count; i++) {
+    const jenis = jenisTypes[Math.floor(Math.random() * jenisTypes.length)];
+    const gtkData = gtkList[Math.floor(Math.random() * gtkList.length)];
+    const isVerified = Math.random() > 0.3;
+
+    const talenta: Talenta = {
+      id: `talenta-${i + 1}`,
+      jenis,
+      isVerified,
+      gtk: {
+        id: gtkData.id,
+        namaLengkap: gtkData.namaLengkap,
+        foto: gtkData.foto,
+        sekolah: { nama: gtkData.sekolah },
+      },
+    };
+
+    if (jenis === "peserta_pelatihan") {
+      talenta.namaKegiatan = kegiatanNames[Math.floor(Math.random() * kegiatanNames.length)];
+    } else if (jenis === "pembimbing_lomba" || jenis === "peserta_lomba") {
+      talenta.namaLomba = lombaNames[Math.floor(Math.random() * lombaNames.length)];
+      talenta.jenjang = jenjangOptions[Math.floor(Math.random() * jenjangOptions.length)];
+      talenta.bidang = bidangOptions[Math.floor(Math.random() * bidangOptions.length)];
+      talenta.prestasi = prestasiOptions[Math.floor(Math.random() * prestasiOptions.length)];
+    } else {
+      talenta.deskripsi = `Memiliki minat dan bakat di bidang ${bidangOptions[Math.floor(Math.random() * bidangOptions.length)].toLowerCase()} dengan pengalaman yang cukup baik.`;
+    }
+
+    data.push(talenta);
+  }
+
+  return data;
+}
+
+const FAKE_DATA = generateFakeData(200);
+
 export default function TalentaPage() {
-  const [data, setData] = useState<Talenta[]>([]);
-  const [pagination, setPagination] = useState<Pagination | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
   const [jenis, setJenis] = useState("all");
   const [verified, setVerified] = useState("all");
+  const [page, setPage] = useState(1);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [formJenis, setFormJenis] = useState("");
+  const [formGtk, setFormGtk] = useState("");
+  const [formJenjang, setFormJenjang] = useState("");
+  const [formBidang, setFormBidang] = useState("");
+  const [gtkSearch, setGtkSearch] = useState("");
 
-  const fetchData = useCallback(async (page = 1) => {
-    setLoading(true);
-    const params = new URLSearchParams({ page: String(page), limit: "40" });
-    if (jenis !== "all") params.set("jenis", jenis);
-    if (verified !== "all") params.set("verified", verified);
+  // Filter GTK list for combobox
+  const filteredGtkList = useMemo(() => {
+    if (!gtkSearch) return gtkList;
+    const searchLower = gtkSearch.toLowerCase();
+    return gtkList.filter(
+      (gtk) =>
+        gtk.namaLengkap.toLowerCase().includes(searchLower) ||
+        gtk.sekolah.toLowerCase().includes(searchLower)
+    );
+  }, [gtkSearch]);
 
-    const res = await fetch(`/api/talenta?${params}`);
-    const json = await res.json();
-    setData(json.data || []);
-    setPagination(json.pagination);
-    setLoading(false);
-  }, [jenis, verified]);
+  const limit = 20;
 
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
-
-  async function handleVerify(id: string, verify: boolean) {
-    await fetch(`/api/talenta/${id}/verify`, {
-      method: verify ? "POST" : "DELETE",
+  // Filter and search data
+  const filteredData = useMemo(() => {
+    return FAKE_DATA.filter((item) => {
+      // Search filter
+      if (search) {
+        const searchLower = search.toLowerCase();
+        const matchName = item.gtk?.namaLengkap.toLowerCase().includes(searchLower);
+        const matchSekolah = item.gtk?.sekolah?.nama.toLowerCase().includes(searchLower);
+        const matchKegiatan = item.namaKegiatan?.toLowerCase().includes(searchLower);
+        const matchLomba = item.namaLomba?.toLowerCase().includes(searchLower);
+        if (!matchName && !matchSekolah && !matchKegiatan && !matchLomba) return false;
+      }
+      // Jenis filter
+      if (jenis !== "all" && item.jenis !== jenis) return false;
+      // Verified filter
+      if (verified === "true" && !item.isVerified) return false;
+      if (verified === "false" && item.isVerified) return false;
+      return true;
     });
-    fetchData();
+  }, [search, jenis, verified]);
+
+  // Paginate data
+  const paginatedData = useMemo(() => {
+    const start = (page - 1) * limit;
+    return filteredData.slice(start, start + limit);
+  }, [filteredData, page]);
+
+  const pagination = {
+    page,
+    limit,
+    total: filteredData.length,
+    totalPages: Math.ceil(filteredData.length / limit),
+  };
+
+  function handleVerify(id: string, verify: boolean) {
+    // In real app, this would call API
+    console.log(`${verify ? "Verifying" : "Unverifying"} talenta ${id}`);
+  }
+
+  function handleSearch(value: string) {
+    setSearch(value);
+    setPage(1);
   }
 
   const columns = [
@@ -74,11 +221,17 @@ export default function TalentaPage() {
       key: "gtk",
       header: "GTK",
       cell: (row: Talenta) => (
-        <div>
-          <Link href={`/admin/gtk/${row.gtk?.id}`} className="font-medium hover:underline">
-            {row.gtk?.namaLengkap}
-          </Link>
-          <p className="text-xs text-muted-foreground">{row.gtk?.sekolah?.nama || "-"}</p>
+        <div className="flex items-center gap-3">
+          <Avatar className="h-8 w-8">
+            <AvatarImage src={row.gtk?.foto} alt={row.gtk?.namaLengkap} />
+            <AvatarFallback>{row.gtk?.namaLengkap?.charAt(0)}</AvatarFallback>
+          </Avatar>
+          <div>
+            <Link href={`/admin/gtk/${row.gtk?.id}`} className="font-medium hover:underline">
+              {row.gtk?.namaLengkap}
+            </Link>
+            <p className="text-xs text-muted-foreground">{row.gtk?.sekolah?.nama || "-"}</p>
+          </div>
         </div>
       ),
     },
@@ -143,22 +296,31 @@ export default function TalentaPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Manajemen Talenta</h1>
-        <Button variant="outline" onClick={() => window.open("/api/export/talenta?format=csv", "_blank")}>
-          <IconDownload className="h-4 w-4 mr-2" />
-          Export CSV
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={() => setIsModalOpen(true)}>
+            <IconPlus className="h-4 w-4 mr-2" />
+            Tambah Talenta
+          </Button>
+          <Button variant="outline" onClick={() => window.open("/api/export/talenta?format=csv", "_blank")}>
+            <IconDownload className="h-4 w-4 mr-2" />
+            Export CSV
+          </Button>
+        </div>
       </div>
 
       <DataTable
         columns={columns}
-        data={data}
-        pagination={pagination || undefined}
-        onPageChange={fetchData}
-        loading={loading}
+        data={paginatedData}
+        pagination={pagination}
+        onPageChange={setPage}
+        loading={false}
+        searchPlaceholder="Cari GTK, sekolah, atau kegiatan..."
+        onSearch={handleSearch}
         filters={[
           {
             key: "jenis",
             label: "Jenis",
+            value: jenis,
             options: [
               { value: "all", label: "Semua Jenis" },
               { value: "peserta_pelatihan", label: "Peserta Pelatihan" },
@@ -166,21 +328,169 @@ export default function TalentaPage() {
               { value: "peserta_lomba", label: "Peserta Lomba" },
               { value: "minat_bakat", label: "Minat/Bakat" },
             ],
-            onChange: setJenis,
+            onChange: (v) => { setJenis(v); setPage(1); },
           },
           {
             key: "verified",
             label: "Status",
+            value: verified,
             options: [
               { value: "all", label: "Semua Status" },
               { value: "true", label: "Terverifikasi" },
               { value: "false", label: "Belum Verifikasi" },
             ],
-            onChange: setVerified,
+            onChange: (v) => { setVerified(v); setPage(1); },
           },
         ]}
-        emptyMessage="Belum ada data talenta"
+        emptyMessage="Tidak ada data talenta yang sesuai"
       />
+
+      {/* Create Talenta Modal */}
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Tambah Talenta Baru</DialogTitle>
+            <DialogDescription>Isi form berikut untuk menambahkan data talenta GTK.</DialogDescription>
+          </DialogHeader>
+
+          <form className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="gtk">GTK</Label>
+              <Combobox value={formGtk} onValueChange={(v) => v && setFormGtk(v)}>
+                <ComboboxInput
+                  placeholder="Cari nama GTK..."
+                  className="w-full"
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setGtkSearch(e.target.value)}
+                />
+                <ComboboxContent>
+                  <ComboboxList>
+                    <ComboboxEmpty>Tidak ditemukan</ComboboxEmpty>
+                    {filteredGtkList.map((gtk) => (
+                      <ComboboxItem key={gtk.id} value={gtk.id}>
+                        <div className="flex items-center gap-3">
+                          <Avatar className="h-7 w-7">
+                            <AvatarImage src={gtk.foto} alt={gtk.namaLengkap} />
+                            <AvatarFallback>{gtk.namaLengkap.charAt(0)}</AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <p className="text-sm font-medium">{gtk.namaLengkap}</p>
+                            <p className="text-xs text-muted-foreground">{gtk.sekolah}</p>
+                          </div>
+                        </div>
+                      </ComboboxItem>
+                    ))}
+                  </ComboboxList>
+                </ComboboxContent>
+              </Combobox>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="jenis">Jenis Talenta</Label>
+              <Select value={formJenis} onValueChange={(v) => v && setFormJenis(v)}>
+                <SelectTrigger>
+                  <SelectValue>
+                    {formJenis === "peserta_pelatihan" ? "Peserta Pelatihan/Workshop/Seminar/Upskilling" :
+                      formJenis === "pembimbing_lomba" ? "Pembimbing Lomba" :
+                        formJenis === "peserta_lomba" ? "Peserta Lomba" :
+                          formJenis === "minat_bakat" ? "Minat/Bakat" : "Pilih Jenis Talenta"}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="peserta_pelatihan">Peserta Pelatihan/Workshop/Seminar/Upskilling</SelectItem>
+                  <SelectItem value="pembimbing_lomba">Pembimbing Lomba</SelectItem>
+                  <SelectItem value="peserta_lomba">Peserta Lomba</SelectItem>
+                  <SelectItem value="minat_bakat">Minat/Bakat</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Conditional Fields based on Jenis */}
+            {formJenis === "peserta_pelatihan" && (
+              <>
+                <div className="space-y-2">
+                  <Label>Nama Kegiatan</Label>
+                  <Input placeholder="Nama kegiatan pelatihan" />
+                </div>
+                <div className="space-y-2">
+                  <Label>Penyelenggara Kegiatan</Label>
+                  <Input placeholder="Nama penyelenggara" />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Tanggal Mulai</Label>
+                    <Input type="date" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Jangka Waktu (Hari)</Label>
+                    <Input type="number" placeholder="Jumlah hari" />
+                  </div>
+                </div>
+              </>
+            )}
+
+            {(formJenis === "pembimbing_lomba" || formJenis === "peserta_lomba") && (
+              <>
+                <div className="space-y-2">
+                  <Label>Nama Lomba</Label>
+                  <Input placeholder="Nama lomba" />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Jenjang</Label>
+                    <Select value={formJenjang} onValueChange={(v) => v && setFormJenjang(v)}>
+                      <SelectTrigger>
+                        <SelectValue>{formJenjang ? jenjangOptions.find(j => j.toLowerCase() === formJenjang) : "Pilih jenjang"}</SelectValue>
+                      </SelectTrigger>
+                      <SelectContent>
+                        {jenjangOptions.map((j) => (
+                          <SelectItem key={j} value={j.toLowerCase()}>{j}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Bidang</Label>
+                    <Select value={formBidang} onValueChange={(v) => v && setFormBidang(v)}>
+                      <SelectTrigger>
+                        <SelectValue>{formBidang ? bidangOptions.find(b => b.toLowerCase() === formBidang) : "Pilih bidang"}</SelectValue>
+                      </SelectTrigger>
+                      <SelectContent>
+                        {bidangOptions.map((b) => (
+                          <SelectItem key={b} value={b.toLowerCase()}>{b}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Penyelenggara Kegiatan</Label>
+                  <Input placeholder="Nama penyelenggara" />
+                </div>
+                <div className="space-y-2">
+                  <Label>Prestasi</Label>
+                  <Input placeholder="Contoh: Juara 1, Finalis, dll" />
+                </div>
+                <div className="space-y-2">
+                  <Label>Upload Bukti/Sertifikat</Label>
+                  <Input type="file" accept=".pdf,.jpg,.jpeg,.png" />
+                </div>
+              </>
+            )}
+
+            {formJenis === "minat_bakat" && (
+              <div className="space-y-2">
+                <Label>Deskripsi Minat/Bakat</Label>
+                <Textarea placeholder="Jelaskan minat dan bakat yang dimiliki..." rows={4} />
+              </div>
+            )}
+          </form>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsModalOpen(false)}>Batal</Button>
+            <Button onClick={() => { setIsModalOpen(false); setFormJenis(""); setFormGtk(""); setFormJenjang(""); setFormBidang(""); setGtkSearch(""); }}>Simpan</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

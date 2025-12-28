@@ -28,6 +28,7 @@ interface DataTableProps<T> {
   filters?: {
     key: string;
     label: string;
+    value?: string;
     options: { value: string; label: string }[];
     onChange: (value: string) => void;
   }[];
@@ -71,20 +72,23 @@ export function DataTable<T extends { id: string }>({
         )}
         {filters && (
           <div className="flex gap-2">
-            {filters.map((filter) => (
-              <Select key={filter.key} onValueChange={filter.onChange}>
-                <SelectTrigger className="w-40">
-                  <SelectValue placeholder={filter.label} />
-                </SelectTrigger>
-                <SelectContent>
-                  {filter.options.map((opt) => (
-                    <SelectItem key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            ))}
+            {filters.map((filter) => {
+              const selectedOption = filter.options.find(opt => opt.value === filter.value);
+              return (
+                <Select key={filter.key} value={filter.value} onValueChange={(v) => v && filter.onChange(v)}>
+                  <SelectTrigger className="w-40">
+                    <SelectValue>{selectedOption?.label || filter.label}</SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    {filter.options.map((opt) => (
+                      <SelectItem key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              );
+            })}
           </div>
         )}
       </div>
