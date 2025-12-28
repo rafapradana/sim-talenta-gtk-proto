@@ -195,17 +195,17 @@ export default function CetakTalentaPage() {
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead className="w-12">
-                                <Checkbox
-                                    checked={selectedIds.size === filteredData.length && filteredData.length > 0}
-                                    onCheckedChange={toggleSelectAll}
-                                />
-                            </TableHead>
                             <TableHead>GTK</TableHead>
                             <TableHead>NUPTK</TableHead>
                             <TableHead>Sekolah</TableHead>
                             <TableHead>Jenis</TableHead>
                             <TableHead className="text-center">Talenta</TableHead>
+                            <TableHead className="w-12 text-right">
+                                <Checkbox
+                                    checked={selectedIds.size === filteredData.length && filteredData.length > 0}
+                                    onCheckedChange={toggleSelectAll}
+                                />
+                            </TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -218,12 +218,6 @@ export default function CetakTalentaPage() {
                         ) : (
                             paginatedData.map((gtk) => (
                                 <TableRow key={gtk.id} className={selectedIds.has(gtk.id) ? "bg-muted/50" : ""}>
-                                    <TableCell>
-                                        <Checkbox
-                                            checked={selectedIds.has(gtk.id)}
-                                            onCheckedChange={() => toggleSelect(gtk.id)}
-                                        />
-                                    </TableCell>
                                     <TableCell>
                                         <div className="flex items-center gap-3">
                                             <Avatar className="h-8 w-8">
@@ -240,6 +234,12 @@ export default function CetakTalentaPage() {
                                     </TableCell>
                                     <TableCell className="text-center">
                                         <Badge variant="secondary">{gtk.talentaCount}</Badge>
+                                    </TableCell>
+                                    <TableCell className="text-right">
+                                        <Checkbox
+                                            checked={selectedIds.has(gtk.id)}
+                                            onCheckedChange={() => toggleSelect(gtk.id)}
+                                        />
                                     </TableCell>
                                 </TableRow>
                             ))
