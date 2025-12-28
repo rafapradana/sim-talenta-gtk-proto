@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -124,7 +126,52 @@ export default function CetakGtkSekolahPage() {
     const totalTalentaSelected = selectedSekolah.reduce((sum, s) => sum + s.jumlahTalenta, 0);
 
     function handleExportPdf() {
-        alert(`Mengekspor PDF:\nJudul: ${printTitle}\nDeskripsi: ${printDescription}\nJumlah Sekolah: ${selectedIds.size}\nTotal GTK: ${totalGtkSelected}`);
+        const doc = new jsPDF();
+        const pageWidth = doc.internal.pageSize.getWidth();
+
+        // Title
+        doc.setFontSize(16);
+        doc.setFont("helvetica", "bold");
+        doc.text(printTitle || "Rekapitulasi GTK Sekolah", pageWidth / 2, 20, { align: "center" });
+
+        // Description
+        if (printDescription) {
+            doc.setFontSize(10);
+            doc.setFont("helvetica", "normal");
+            doc.text(printDescription, pageWidth / 2, 28, { align: "center" });
+        }
+
+        // Date
+        doc.setFontSize(9);
+        doc.text(`Tanggal Cetak: ${new Date().toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })}`, pageWidth / 2, 35, { align: "center" });
+
+        // Table
+        const tableData = selectedSekolah.map((s, idx) => [
+            idx + 1,
+            s.nama,
+            s.npsn,
+            s.kepalaSekolah,
+            s.jumlahGtk,
+            s.jumlahTalenta
+        ]);
+
+        autoTable(doc, {
+            startY: 42,
+            head: [["No", "Nama Sekolah", "NPSN", "Kepala Sekolah", "GTK", "Talenta"]],
+            body: tableData,
+            styles: { fontSize: 9 },
+            headStyles: { fillColor: [59, 130, 246] },
+        });
+
+        // Footer
+        const finalY = (doc as jsPDF & { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 10;
+        doc.setFontSize(9);
+        doc.text(`Total Sekolah: ${selectedSekolah.length}`, 14, finalY);
+        doc.text(`Total GTK: ${totalGtkSelected}`, 14, finalY + 5);
+        doc.text(`Total Talenta: ${totalTalentaSelected}`, 14, finalY + 10);
+
+        doc.save(`rekapitulasi-gtk-sekolah-${Date.now()}.pdf`);
+
         setIsModalOpen(false);
         setPrintTitle("");
         setPrintDescription("");

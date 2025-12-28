@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -128,8 +130,51 @@ export default function CetakTalentaPage() {
     const selectedGtk = fakeGtkData.filter(g => selectedIds.has(g.id));
 
     function handleExportPdf() {
-        // In real app, this would generate PDF
-        alert(`Mengekspor PDF:\nJudul: ${printTitle}\nDeskripsi: ${printDescription}\nJumlah GTK: ${selectedIds.size}`);
+        const doc = new jsPDF();
+        const pageWidth = doc.internal.pageSize.getWidth();
+
+        // Title
+        doc.setFontSize(16);
+        doc.setFont("helvetica", "bold");
+        doc.text(printTitle || "Rekapitulasi Talenta GTK", pageWidth / 2, 20, { align: "center" });
+
+        // Description
+        if (printDescription) {
+            doc.setFontSize(10);
+            doc.setFont("helvetica", "normal");
+            doc.text(printDescription, pageWidth / 2, 28, { align: "center" });
+        }
+
+        // Date
+        doc.setFontSize(9);
+        doc.text(`Tanggal Cetak: ${new Date().toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })}`, pageWidth / 2, 35, { align: "center" });
+
+        // Table
+        const tableData = selectedGtk.map((gtk, idx) => [
+            idx + 1,
+            gtk.namaLengkap,
+            gtk.nuptk,
+            gtk.sekolah,
+            gtk.jenis,
+            gtk.talentaCount
+        ]);
+
+        autoTable(doc, {
+            startY: 42,
+            head: [["No", "Nama GTK", "NUPTK", "Sekolah", "Jenis", "Talenta"]],
+            body: tableData,
+            styles: { fontSize: 9 },
+            headStyles: { fillColor: [59, 130, 246] },
+        });
+
+        // Footer
+        const finalY = (doc as jsPDF & { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 10;
+        doc.setFontSize(9);
+        doc.text(`Total GTK: ${selectedGtk.length}`, 14, finalY);
+        doc.text(`Total Talenta: ${selectedGtk.reduce((sum, g) => sum + g.talentaCount, 0)}`, 14, finalY + 5);
+
+        doc.save(`rekapitulasi-talenta-${Date.now()}.pdf`);
+
         setIsModalOpen(false);
         setPrintTitle("");
         setPrintDescription("");

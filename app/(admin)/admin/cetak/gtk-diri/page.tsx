@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -148,7 +150,54 @@ export default function CetakGtkDiriPage() {
     const selectedGtk = fakeGtkData.filter(g => selectedIds.has(g.id));
 
     function handleExportPdf() {
-        alert(`Mengekspor PDF Profil GTK:\nJudul: ${printTitle}\nDeskripsi: ${printDescription}\nJumlah GTK: ${selectedIds.size}`);
+        const doc = new jsPDF();
+        const pageWidth = doc.internal.pageSize.getWidth();
+
+        // Title
+        doc.setFontSize(16);
+        doc.setFont("helvetica", "bold");
+        doc.text(printTitle || "Profil GTK", pageWidth / 2, 20, { align: "center" });
+
+        // Description
+        if (printDescription) {
+            doc.setFontSize(10);
+            doc.setFont("helvetica", "normal");
+            doc.text(printDescription, pageWidth / 2, 28, { align: "center" });
+        }
+
+        // Date
+        doc.setFontSize(9);
+        doc.text(`Tanggal Cetak: ${new Date().toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })}`, pageWidth / 2, 35, { align: "center" });
+
+        // Table with GTK profiles
+        const tableData = selectedGtk.map((gtk, idx) => [
+            idx + 1,
+            gtk.namaLengkap,
+            gtk.nuptk,
+            gtk.jabatan,
+            gtk.sekolah,
+            gtk.talentaList.join(", ")
+        ]);
+
+        autoTable(doc, {
+            startY: 42,
+            head: [["No", "Nama GTK", "NUPTK", "Jabatan", "Sekolah", "Talenta"]],
+            body: tableData,
+            styles: { fontSize: 8, cellPadding: 2 },
+            headStyles: { fillColor: [59, 130, 246] },
+            columnStyles: {
+                5: { cellWidth: 50 } // Talenta column wider
+            }
+        });
+
+        // Footer
+        const finalY = (doc as jsPDF & { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 10;
+        doc.setFontSize(9);
+        doc.text(`Total GTK: ${selectedGtk.length}`, 14, finalY);
+        doc.text(`Total Talenta: ${selectedGtk.reduce((sum, g) => sum + g.talentaList.length, 0)}`, 14, finalY + 5);
+
+        doc.save(`profil-gtk-${Date.now()}.pdf`);
+
         setIsModalOpen(false);
         setPrintTitle("");
         setPrintDescription("");
