@@ -133,7 +133,7 @@ export default function AdminDashboard() {
       <section className="space-y-2">
         <h2 className="text-sm font-semibold text-muted-foreground">Statistik Umum</h2>
         <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
-          <Card>
+          <Card className="py-0">
             <CardContent className="py-3 px-4">
               <div className="flex items-center gap-3">
                 <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-primary/10">
@@ -147,7 +147,7 @@ export default function AdminDashboard() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="py-0">
             <CardContent className="py-3 px-4">
               <div className="flex items-center gap-3">
                 <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-blue-500/10">
@@ -161,7 +161,7 @@ export default function AdminDashboard() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="py-0">
             <CardContent className="py-3 px-4">
               <div className="flex items-center gap-3">
                 <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-green-500/10">
@@ -175,7 +175,7 @@ export default function AdminDashboard() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="py-0">
             <CardContent className="py-3 px-4">
               <div className="flex items-center gap-3">
                 <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-orange-500/10">
@@ -193,7 +193,7 @@ export default function AdminDashboard() {
 
       {/* Charts Section */}
       <section className="space-y-4">
-        <h2 className="text-lg font-semibold text-muted-foreground">Visualisasi Data (Demo)</h2>
+        <h2 className="text-lg font-semibold text-muted-foreground">Visualisasi Data</h2>
         <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
           {/* Bar Chart: Jenis Talenta */}
           <Card className="overflow-hidden">
