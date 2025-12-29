@@ -62,7 +62,7 @@ const jenisLabels: Record<string, string> = {
   minat_bakat: "Minat/Bakat",
 };
 
-const bidangOptions = ["Akademik", "Inovasi", "Teknologi", "Sosial", "Seni", "Sastra", "Kepemimpinan", "Lainnya"];
+const bidangOptions = ["Akademik", "Inovasi", "Teknologi", "Sosial", "Seni", "Sastra", "Olahraga", "Kepemimpinan", "Lainnya"];
 const jenjangOptions = ["Kota", "Provinsi", "Nasional", "Internasional"];
 
 // ========== FAKE GTK DATA WITH PHOTOS (50 entries) ==========
